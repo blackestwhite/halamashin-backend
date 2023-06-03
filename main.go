@@ -1,19 +1,17 @@
 package main
 
 import (
+	"app/db"
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type User struct {
@@ -24,27 +22,12 @@ type User struct {
 	Password    string             `json:"password" bson:"password"`
 }
 
-var Client *mongo.Client
-
 func main() {
 	// format loggin
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	// database connect
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*5)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://127.0.0.1:27017"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	Client = client
-
-	ctx, cacnel := context.WithTimeout(context.TODO(), time.Second*2)
-	defer cacnel()
-	err = Client.Ping(ctx, readpref.Primary())
-	if err != nil {
-		log.Fatal(err)
-	}
+	// connect database
+	db.ConnectDatabase()
 
 	// set up router
 	router := gin.New()
@@ -59,7 +42,7 @@ func main() {
 			return
 		}
 
-		usersColl := Client.Database("hala").Collection("users")
+		usersColl := db.Client.Database("hala").Collection("users")
 
 		result := usersColl.FindOne(context.TODO(), bson.M{
 			"phone_number": user.PhoneNumber,
