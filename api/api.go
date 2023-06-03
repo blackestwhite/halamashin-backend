@@ -10,6 +10,24 @@ import (
 )
 
 func Setup(router *gin.Engine) {
+	var userService service.UserService
+
+	router.GET("/get/:phone_number", func(c *gin.Context) {
+		user, err := userService.GetByPhoneNumber(c.Param("phone_number"))
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+
+		user.Password = ""
+
+		c.JSON(http.StatusOK, gin.H{
+			"user": user,
+		})
+	})
+
 	router.POST("/new", func(c *gin.Context) {
 		var user entity.User
 		err := c.Bind(&user)
@@ -19,8 +37,6 @@ func Setup(router *gin.Engine) {
 			})
 			return
 		}
-
-		var userService service.UserService
 
 		_, err = userService.GetByPhoneNumber(user.PhoneNumber)
 		if err != nil {
