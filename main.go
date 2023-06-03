@@ -2,9 +2,8 @@ package main
 
 import (
 	"app/db"
+	"app/utils"
 	"context"
-	"crypto/sha1"
-	"encoding/base64"
 	"log"
 	"net/http"
 
@@ -51,7 +50,7 @@ func main() {
 			if result.Err() == mongo.ErrNoDocuments {
 				// create the user
 				user.ID = primitive.NewObjectID()
-				user.Password = hashString(user.Password)
+				user.Password = utils.HashString(user.Password)
 
 				res, err := usersColl.InsertOne(context.TODO(), user)
 				if err != nil {
@@ -82,11 +81,4 @@ func main() {
 	})
 
 	log.Fatal(router.Run(":8080"))
-}
-
-func hashString(stringToHash string) string {
-	salt := "salt is bad for health"
-	hasher := sha1.New()
-	hasher.Write([]byte(stringToHash + salt))
-	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 }
