@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/db"
+	"app/entity"
 	"app/utils"
 	"context"
 	"log"
@@ -12,14 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
-
-type User struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id"`
-	Firstname   string             `json:"firstname" bson:"firstname"`
-	Lastname    string             `json:"lastname" bson:"lastname"`
-	PhoneNumber string             `json:"phone_number" bson:"phone_number"`
-	Password    string             `json:"password" bson:"password"`
-}
 
 func main() {
 	// format loggin
@@ -32,7 +25,7 @@ func main() {
 	router := gin.New()
 
 	router.POST("/new", func(c *gin.Context) {
-		var user User
+		var user entity.User
 		err := c.Bind(&user)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
