@@ -1,71 +1,15 @@
 package api
 
 import (
-	"app/entity"
-	"app/service"
-	"net/http"
+	"app/api/handlers"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func Setup(router *gin.Engine) {
-	var userService service.UserService
+	apiGroup := router.Group("api")
+	v1 := apiGroup.Group("v1")
 
-	router.GET("/get/:phone_number", func(c *gin.Context) {
-		user, err := userService.GetByPhoneNumber(c.Param("phone_number"))
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-				"message": err.Error(),
-			})
-			return
-		}
-
-		user.Password = ""
-
-		c.JSON(http.StatusOK, gin.H{
-			"user": user,
-		})
-	})
-
-	router.POST("/new", func(c *gin.Context) {
-		var user entity.User
-		err := c.Bind(&user)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"message": err.Error(),
-			})
-			return
-		}
-
-		_, err = userService.GetByPhoneNumber(user.PhoneNumber)
-		if err != nil {
-			if err != mongo.ErrNoDocuments {
-				// internal server error
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
-			// create the user
-			insertionID, err := userService.Create(user)
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
-
-			c.JSON(http.StatusOK, gin.H{
-				"user":         user,
-				"insertion_id": insertionID,
-			})
-			return
-		}
-
-		// user exists
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "user with this phone number already exists",
-		})
-	})
+	handlers.SetupStats(v1)
+	handlers.SetupUser(v1)
 }
