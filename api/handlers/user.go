@@ -26,6 +26,7 @@ func (u *UserHandler) initRoutes(r *gin.RouterGroup) {
 	user.POST("/new", u.createUser)
 	user.GET("/get/:phone_number", u.getByPhoneNumber)
 	user.PUT("/update/:user_id", u.updateUser)
+	user.POST("/login", u.loginUser)
 }
 
 func (u *UserHandler) getByPhoneNumber(c *gin.Context) {
@@ -119,5 +120,40 @@ func (u *UserHandler) updateUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "user updated successfully",
+	})
+}
+
+func (u *UserHandler) loginUser(c *gin.Context) {
+	var user entity.User
+	err := c.Bind(&user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// login:
+	//	  phone_number
+	//    password
+
+	fetchedUser, err := u.userService.GetByPhoneNumber(user.PhoneNumber)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if utils.HashString(user.Password) != fetchedUser.Password {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"message": "password mismatch",
+		})
+		return
+	}
+
+	// logged in successfully
+	c.JSON(http.StatusOK, gin.H{
+		"message": "logged in successfully",
 	})
 }
