@@ -3,6 +3,7 @@ package handlers
 import (
 	"app/entity"
 	"app/service"
+	"app/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,7 @@ func (u *UserHandler) initRoutes(r *gin.RouterGroup) {
 
 	user.POST("/new", u.createUser)
 	user.GET("/get/:phone_number", u.getByPhoneNumber)
+	user.PUT("/update/:user_id", u.updateUser)
 }
 
 func (u *UserHandler) getByPhoneNumber(c *gin.Context) {
@@ -80,5 +82,42 @@ func (u *UserHandler) createUser(c *gin.Context) {
 	// user exists
 	c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 		"message": "user with this phone number already exists",
+	})
+}
+
+func (u *UserHandler) updateUser(c *gin.Context) {
+	fetchedUser, err := u.userService.Get(c.Param("user_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	var user entity.User
+	err = c.Bind(&user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	fetchedUser.Firstname = user.Firstname
+	fetchedUser.Lastname = user.Lastname
+	if utils.HashString(user.Password) != fetchedUser.Password && user.Password != "" {
+		fetchedUser.Password = utils.HashString(user.Password)
+	}
+
+	err = u.userService.Update(fetchedUser, fetchedUser)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "user updated successfully",
 	})
 }
