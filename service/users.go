@@ -33,3 +33,29 @@ func (u *UserService) GetByPhoneNumber(phoneNumber string) (user entity.User, er
 	err = res.Decode(&user)
 	return
 }
+
+func (u *UserService) Get(userID string) (user entity.User, err error) {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return user, err
+	}
+
+	res := db.Client.Database("hala").Collection("users").FindOne(context.TODO(), bson.M{
+		"_id": objectID,
+	})
+	if res.Err() != nil {
+		return user, res.Err()
+	}
+
+	err = res.Decode(&user)
+	return
+}
+
+func (u *UserService) Update(user entity.User, update interface{}) (err error) {
+	_, err = db.Client.Database("hala").Collection("users").UpdateOne(context.TODO(), bson.M{
+		"_id": user.ID,
+	}, bson.M{
+		"$set": update,
+	})
+	return
+}
