@@ -152,7 +152,26 @@ func (u *UserHandler) loginUser(c *gin.Context) {
 		return
 	}
 
+	tokenString, err := fetchedUser.GenerateToken()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+	maxAge := 60 * 60 * 24 * 31
+
 	// logged in successfully
+	c.SetCookie(
+		"hm-token",
+		tokenString,
+		maxAge,
+		"/",
+		"",
+		false,
+		false,
+	)
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "logged in successfully",
 	})
