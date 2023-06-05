@@ -133,10 +133,6 @@ func (u *UserHandler) loginUser(c *gin.Context) {
 		return
 	}
 
-	// login:
-	//	  phone_number
-	//    password
-
 	fetchedUser, err := u.userService.GetByPhoneNumber(user.PhoneNumber)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
