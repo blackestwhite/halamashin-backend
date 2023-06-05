@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"app/api/middleware"
 	"app/entity"
 	"app/service"
 	"app/utils"
@@ -23,9 +24,9 @@ func SetupUser(r *gin.RouterGroup) *UserHandler {
 func (u *UserHandler) initRoutes(r *gin.RouterGroup) {
 	user := r.Group("user")
 
-	user.POST("/new", u.createUser)
+	user.POST("/create", u.createUser)
 	user.GET("/get/:phone_number", u.getByPhoneNumber)
-	user.PUT("/update/:user_id", u.updateUser)
+	user.PUT("/update/:user_id", middleware.Auth(), u.updateUser)
 	user.POST("/login", u.loginUser)
 }
 
@@ -91,6 +92,21 @@ func (u *UserHandler) updateUser(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
+		})
+		return
+	}
+
+	value, exists := c.Get("user_id")
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"message": "you cannot access this resource",
+		})
+		return
+	}
+
+	if value.(string) != fetchedUser.ID.Hex() {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"message": "you cannot access this resource",
 		})
 		return
 	}
