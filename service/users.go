@@ -6,6 +6,7 @@ import (
 	"app/utils"
 	"context"
 	"log"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,6 +18,7 @@ type UserService struct{}
 func (u *UserService) Create(instance entity.User) (insertionID primitive.ObjectID, err error) {
 	instance.ID = primitive.NewObjectID()
 	instance.Password = utils.HashString(instance.Password)
+	instance.CreatedAt = time.Now().Unix()
 
 	res, err := db.Client.Database("hala").Collection("users").InsertOne(context.TODO(), instance)
 	return res.InsertedID.(primitive.ObjectID), err
