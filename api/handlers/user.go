@@ -75,7 +75,7 @@ func (u *UserHandler) createUser(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"user":         user,
+			"message":      "ok, user created successfully",
 			"insertion_id": insertionID,
 		})
 		return
